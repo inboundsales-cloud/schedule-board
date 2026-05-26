@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>出張・配置管理ボード</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#e8e8ec;display:flex;align-items:center;justify-content:center;font-family:'Inter','Noto Sans JP',sans-serif}
+:root{
+  --navy:#1a2744;--gold:#c8a040;--green:#2e9e68;--red:#d44444;--blue:#2c72c7;
+  --bg:#f7f7f9;--card:#ffffff;--border:#e4e4ee;--border2:#d0d0e0;
+  --text:#1a1a2e;--text2:#5a5a72;--text3:#9898aa;
+}
+#app{width:100vw;height:56.25vw;max-height:100vh;max-width:177.78vh;display:flex;flex-direction:column;overflow:hidden;font-size:clamp(7px,0.85vw,12px);background:var(--bg)}
+
+/* ヘッダー */
+#header{background:var(--navy);padding:0.4em 1.2em;display:flex;align-items:center;gap:1.2em;flex-shrink:0;border-bottom:2px solid var(--gold)}
+.hdr-title{font-size:1.4em;font-weight:800;color:#fff;letter-spacing:0.08em}
+.hdr-date{font-size:1.1em;color:rgba(255,255,255,0.7);margin-left:0.5em}
+.hdr-today{background:var(--gold);color:#000;padding:0.2em 0.8em;border-radius:4px;font-size:0.85em;font-weight:700;letter-spacing:0.05em}
+.hdr-refresh{margin-left:auto;font-size:0.75em;padding:0.3em 0.8em;border:1px solid rgba(255,255,255,0.3);border-radius:4px;background:transparent;color:rgba(255,255,255,0.7);cursor:pointer}
+.hdr-refresh:hover{background:rgba(255,255,255,0.1);color:#fff}
+.hdr-status{font-size:0.72em;color:rgba(255,255,255,0.5);margin-left:0.5em}
+
+/* メインレイアウト */
+#main{display:flex;flex:1;overflow:hidden;gap:0;padding:0.6em;gap:0.6em}
+
+/* 左：カレンダー */
+#calendar-panel{flex:1.4;display:flex;flex-direction:column;gap:0.5em;min-width:0}
+.panel-title{font-size:1em;font-weight:700;color:var(--navy);letter-spacing:0.06em;padding:0 0.2em 0.3em;border-bottom:2px solid var(--navy);margin-bottom:0.3em;display:flex;align-items:center;gap:0.5em}
+.panel-title .sub{font-size:0.75em;font-weight:400;color:var(--text3)}
+
+/* 月カレンダー */
+#cal-wrap{flex:1;background:var(--card);border-radius:8px;border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column}
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);background:var(--navy);flex-shrink:0}
+.cal-dow{text-align:center;padding:0.3em 0;font-size:0.72em;font-weight:700;color:rgba(255,255,255,0.8);letter-spacing:0.08em}
+.cal-dow.sun{color:#ff8888}
+.cal-dow.sat{color:#88aaff}
+.cal-grid{flex:1;display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(6,1fr);border-left:1px solid var(--border);border-top:1px solid var(--border)}
+.cal-cell{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:0.15em 0.2em;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.cal-cell.other-month{background:#f8f8fb}
+.cal-cell.today{background:#fff8e8}
+.cal-day-num{font-size:0.75em;font-weight:700;color:var(--text2);line-height:1.2;flex-shrink:0}
+.cal-day-num.sun{color:#cc3333}
+.cal-day-num.sat{color:#2255cc}
+.cal-day-num.today-num{background:var(--navy);color:#fff;width:1.6em;height:1.6em;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7em}
+.cal-events{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:1px;margin-top:1px}
+.cal-event{font-size:0.62em;padding:1px 3px;border-radius:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;flex-shrink:0}
+.cal-event.shurui-blue{background:#dbeafe;color:#1a4f8a;border-left:2px solid #2c72c7}
+.cal-event.shurui-gray{background:#f0f0f5;color:#44445a;border-left:2px solid #888}
+
+/* 右：キャッチ配置 */
+#catch-panel{flex:1;display:flex;flex-direction:column;min-width:0}
+.catch-grid{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,1fr);gap:0.4em;margin-top:0.3em}
+.catch-card{background:var(--card);border-radius:8px;border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column}
+.catch-card-head{padding:0.3em 0.6em;font-size:0.82em;font-weight:700;color:#fff;letter-spacing:0.04em;flex-shrink:0}
+.catch-card-head.loc-0{background:#b45309}
+.catch-card-head.loc-1{background:#c2410c}
+.catch-card-head.loc-2{background:#1d4ed8}
+.catch-card-head.loc-3{background:#15803d}
+.catch-card-head.loc-4{background:#6d28d9}
+.catch-card-head.loc-5{background:#be185d}
+.catch-card-head.loc-6{background:#b91c1c}
+.catch-card-head.loc-7{background:#374151}
+.catch-members{flex:1;padding:0.3em 0.5em;display:flex;flex-wrap:wrap;gap:0.25em;align-content:flex-start;overflow:hidden}
+.member-tag{background:#f0f0f8;border:1px solid var(--border2);border-radius:3px;padding:0.15em 0.4em;font-size:0.75em;color:var(--text);font-weight:500}
+.empty-msg{font-size:0.72em;color:var(--text3);padding:0.2em}
+
+/* ローディング・エラー */
+.loading{display:flex;align-items:center;justify-content:center;flex:1;color:var(--text3);font-size:1em;flex-direction:column;gap:0.5em}
+.spinner{width:2em;height:2em;border:3px solid var(--border);border-top-color:var(--navy);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-msg{color:var(--red);font-size:0.85em;padding:1em;text-align:center}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div class="hdr-title">📅 出張・配置管理ボード</div>
+    <div class="hdr-date" id="hdr-date"></div>
+    <div class="hdr-today" id="hdr-today"></div>
+    <div class="hdr-status" id="hdr-status"></div>
+    <button class="hdr-refresh" onclick="loadAll()">↻ 更新</button>
+  </div>
+  <div id="main">
+    <div id="calendar-panel">
+      <div class="panel-title">
+        出張カレンダー
+        <span class="sub">■ 書類回収 &nbsp;■ 金消契約</span>
+      </div>
+      <div id="cal-wrap">
+        <div class="cal-header">
+          <div class="cal-dow sun">日</div>
+          <div class="cal-dow">月</div>
+          <div class="cal-dow">火</div>
+          <div class="cal-dow">水</div>
+          <div class="cal-dow">木</div>
+          <div class="cal-dow">金</div>
+          <div class="cal-dow sat">土</div>
+        </div>
+        <div class="cal-grid" id="cal-grid">
+          <div class="loading"><div class="spinner"></div><span>読み込み中...</span></div>
+        </div>
+      </div>
+    </div>
+    <div id="catch-panel">
+      <div class="panel-title">
+        今日のキャッチセールス配置
+      </div>
+      <div class="catch-grid" id="catch-grid">
+        <div class="loading" style="grid-column:1/-1"><div class="spinner"></div><span>読み込み中...</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_KEY = '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';
+const DB_CALENDAR = '39c368b39ccb49e2a12c50207168ddce';
+const DB_CATCH    = '84609900fe0e4400b78ba74984df76bd';
+
+const LOCATIONS = ['淀屋橋','名古屋駅','JR大阪駅','パナソニックスタジアム','中之島','茶屋町','新大阪駅','尼崎駅'];
+
+function today(){ return new Date(); }
+function fmtDate(d){ return d.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'long'}); }
+function isoDate(d){ return d.toISOString().slice(0,10); }
+
+function initHeader(){
+  const d=today();
+  document.getElementById('hdr-date').textContent=fmtDate(d);
+  document.getElementById('hdr-today').textContent=d.getMonth()+1+'月';
+}
+
+async function notionQuery(dbId, filter=null){
+  const body={page_size:100};
+  if(filter) body.filter=filter;
+  const r=await fetch(`https://api.notion.com/v1/databases/${dbId}/query`,{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+API_KEY,'Notion-Version':'2022-06-28','Content-Type':'application/json'},
+    body:JSON.stringify(body)
+  });
+  if(!r.ok) throw new Error('API error: '+r.status);
+  return r.json();
+}
+
+function getProp(page, name){
+  const p=page.properties[name];
+  if(!p) return '';
+  if(p.type==='title') return p.title.map(t=>t.plain_text).join('');
+  if(p.type==='rich_text') return p.rich_text.map(t=>t.plain_text).join('');
+  if(p.type==='select') return p.select?.name||'';
+  if(p.type==='date') return p.date?.start||'';
+  return '';
+}
+
+// カレンダー描画
+function buildCalendar(events){
+  const d=today();
+  const year=d.getFullYear(), month=d.getMonth();
+  const todayStr=isoDate(d);
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const daysInPrev=new Date(year,month,0).getDate();
+
+  // イベントをdateキーでまとめる
+  const evMap={};
+  for(const ev of events){
+    const dateStr=getProp(ev,'日付').slice(0,10);
+    if(!dateStr) continue;
+    if(!evMap[dateStr]) evMap[dateStr]=[];
+    evMap[dateStr].push(ev);
+  }
+
+  const grid=document.getElementById('cal-grid');
+  grid.innerHTML='';
+
+  // 6週分 = 42マス
+  for(let i=0;i<42;i++){
+    const cell=document.createElement('div');
+    cell.className='cal-cell';
+    let dayNum, dateStr, isOther=false;
+
+    if(i<firstDay){
+      dayNum=daysInPrev-(firstDay-1-i);
+      const dd=new Date(year,month-1,dayNum);
+      dateStr=isoDate(dd);
+      isOther=true;
+    } else if(i-firstDay<daysInMonth){
+      dayNum=i-firstDay+1;
+      const dd=new Date(year,month,dayNum);
+      dateStr=isoDate(dd);
+    } else {
+      dayNum=i-firstDay-daysInMonth+1;
+      const dd=new Date(year,month+1,dayNum);
+      dateStr=isoDate(dd);
+      isOther=true;
+    }
+
+    if(isOther) cell.classList.add('other-month');
+    if(dateStr===todayStr) cell.classList.add('today');
+
+    const dow=(i%7);
+    const numEl=document.createElement('div');
+    if(dateStr===todayStr){
+      numEl.className='cal-day-num today-num';
+    } else {
+      numEl.className='cal-day-num'+(dow===0?' sun':dow===6?' sat':'');
+    }
+    numEl.textContent=dayNum;
+    cell.appendChild(numEl);
+
+    // イベント表示
+    if(evMap[dateStr]){
+      const evBox=document.createElement('div');
+      evBox.className='cal-events';
+      for(const ev of evMap[dateStr]){
+        const shurui=getProp(ev,'種別');
+        const tanto=getProp(ev,'担当者名');
+        const yukisaki=getProp(ev,'行き先');
+        const jikan=getProp(ev,'日付').length>10?getProp(ev,'日付').slice(11,16):'';
+        const el=document.createElement('div');
+        el.className='cal-event '+(shurui==='金消契約'?'shurui-blue':'shurui-gray');
+        el.textContent=(jikan?jikan+' ':'')+tanto+(yukisaki?' ('+yukisaki+')':'');
+        el.title=shurui+' / '+tanto+' / '+yukisaki+(jikan?' / '+jikan:'');
+        evBox.appendChild(el);
+      }
+      cell.appendChild(evBox);
+    }
+
+    grid.appendChild(cell);
+  }
+}
+
+// キャッチ配置描画
+function buildCatch(entries){
+  const grid=document.getElementById('catch-grid');
+  grid.innerHTML='';
+
+  // 場所ごとにまとめる
+  const locMap={};
+  for(const loc of LOCATIONS) locMap[loc]=[];
+  for(const e of entries){
+    const loc=getProp(e,'配置場所');
+    const tanto=getProp(e,'担当者名');
+    if(loc&&locMap[loc]!==undefined&&tanto) locMap[loc].push(tanto);
+  }
+
+  LOCATIONS.forEach((loc,idx)=>{
+    const card=document.createElement('div');
+    card.className='catch-card';
+    const head=document.createElement('div');
+    head.className='catch-card-head loc-'+idx;
+    head.textContent=loc;
+    card.appendChild(head);
+    const members=document.createElement('div');
+    members.className='catch-members';
+    if(locMap[loc].length===0){
+      const empty=document.createElement('span');
+      empty.className='empty-msg';
+      empty.textContent='予定なし';
+      members.appendChild(empty);
+    } else {
+      for(const m of locMap[loc]){
+        const tag=document.createElement('span');
+        tag.className='member-tag';
+        tag.textContent=m;
+        members.appendChild(tag);
+      }
+    }
+    card.appendChild(members);
+    grid.appendChild(card);
+  });
+}
+
+async function loadAll(){
+  document.getElementById('hdr-status').textContent='更新中...';
+  try{
+    // 出張カレンダー：今月分
+    const d=today();
+    const firstOfMonth=new Date(d.getFullYear(),d.getMonth(),1);
+    const lastOfMonth=new Date(d.getFullYear(),d.getMonth()+1,0);
+
+    const [calData, catchData]=await Promise.all([
+      notionQuery(DB_CALENDAR,{
+        and:[
+          {property:'日付',date:{on_or_after:isoDate(firstOfMonth)}},
+          {property:'日付',date:{on_or_before:isoDate(lastOfMonth)}}
+        ]
+      }),
+      notionQuery(DB_CATCH,{
+        property:'日付',date:{equals:isoDate(d)}
+      })
+    ]);
+
+    buildCalendar(calData.results);
+    buildCatch(catchData.results);
+    document.getElementById('hdr-status').textContent='最終更新 '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+  } catch(e){
+    document.getElementById('hdr-status').textContent='エラー: '+e.message;
+    document.getElementById('cal-grid').innerHTML='<div class="error-msg">データの取得に失敗しました。<br>APIキーとインテグレーション接続を確認してください。</div>';
+    document.getElementById('catch-grid').innerHTML='<div class="error-msg">データの取得に失敗しました。</div>';
+  }
+}
+
+initHeader();
+loadAll();
+// 5分ごとに自動更新
+setInterval(loadAll, 5*60*1000);
+</script>
+</body>
+</html>
